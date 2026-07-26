@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 using PathLib.Utils;
 
 namespace PathLib
 {
-    // TODO: verify against https://blogs.msdn.microsoft.com/jeremykuhne/2016/04/21/path-normalization/
-    
     /// <summary>
     /// Represents an NT path. Uses the backslash for a separator and
     /// treats paths as case insensitive.
-    /// http://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx
     /// </summary>
     [TypeConverter(typeof(PureWindowsPathConverter))]
     public sealed class PureWindowsPath : PurePath<PureWindowsPath>, IEquatable<PureWindowsPath>
@@ -27,8 +26,6 @@ namespace PathLib
 
         /// <summary>
         /// Create an NT path in the current working directory.
-        /// Uses the backslash for a separator and treats paths as
-        /// case insensitive.
         /// </summary>
         public PureWindowsPath()
         {
@@ -36,8 +33,6 @@ namespace PathLib
 
         /// <summary>
         /// Create an NT path by joining the given path strings.
-        /// Uses the backslash for a separator and treats paths as
-        /// case insensitive.
         /// </summary>
         /// <param name="paths">Paths to combine.</param>
         public PureWindowsPath(params string[] paths)
@@ -47,8 +42,6 @@ namespace PathLib
 
         /// <summary>
         /// Create an NT path by joining the given IPurePaths.
-        /// Uses the backslash for a separator and treats paths as
-        /// case insensitive.
         /// </summary>
         /// <param name="paths">Paths to combine.</param>
         public PureWindowsPath(params IPurePath[] paths)
@@ -58,16 +51,9 @@ namespace PathLib
 
         /// <summary>
         /// Create an NT path with the given components.
-        /// Uses the backslash for a separator and treats paths as
-        /// case insensitive.
         /// </summary>
-        /// <param name="drive"></param>
-        /// <param name="root"></param>
-        /// <param name="dirname"></param>
-        /// <param name="basename"></param>
-        /// <param name="extension"></param>
-        private PureWindowsPath(string drive, string root, string dirname, string basename, string extension)
-            : base(drive, root, dirname, basename, extension)
+        private PureWindowsPath(string drive, string root, ImmutableList<string> tail)
+            : base(drive, root, tail)
         {
         }
 
@@ -78,7 +64,6 @@ namespace PathLib
             private readonly char[] _reservedCharacters =
             {
                 '<', '>', ':', '|', '"', '?', '*', '\u0000'
-                //'/', '\\'  // Technically reserved, but parsed here as path characters
             };
 
             private const string PathSeparator = @"\";
@@ -107,30 +92,16 @@ namespace PathLib
                            : null;
             }
 
-            public string ParseDirname(string remainingPath)
+            public ImmutableList<string> ParseTail(string remainingPath)
             {
-                // Hardcode special dirs
-                if (remainingPath == "." || remainingPath == "..")
+                if (String.IsNullOrEmpty(remainingPath))
                 {
-                    return remainingPath;
+                    return ImmutableList<string>.Empty;
                 }
-                return PathUtils.GetDirectoryName(remainingPath, PathSeparator);
-            }
 
-            public string ParseBasename(string remainingPath)
-            {
-                return !String.IsNullOrEmpty(remainingPath)
-                    ? remainingPath != PathUtils.CurrentDirectoryIdentifier
-                        ? PathUtils.GetFileNameWithoutExtension(remainingPath, PathSeparator)
-                            : PathUtils.CurrentDirectoryIdentifier
-                    : null;
-            }
-
-            public string ParseExtension(string remainingPath)
-            {
-                return !String.IsNullOrEmpty(remainingPath)
-                    ? PathUtils.GetExtension(remainingPath, PathSeparator)
-                    : null;
+                return remainingPath.Split('\\')
+                    .Where(s => !String.IsNullOrEmpty(s))
+                    .ToImmutableList();
             }
 
             public bool ReservedCharactersInPath(string path, out char reservedCharacter)
@@ -143,7 +114,7 @@ namespace PathLib
                         return true;
                     }
                 }
-                reservedCharacter = default (char);
+                reservedCharacter = default(char);
                 return false;
             }
         }
@@ -161,7 +132,7 @@ namespace PathLib
                 result = new PureWindowsPath(path);
                 return true;
             }
-            catch(InvalidPathException)
+            catch (InvalidPathException)
             {
                 result = null;
                 return false;
@@ -183,12 +154,8 @@ namespace PathLib
         /// <inheritdoc/>
         protected override StringComparer ComponentComparer
         {
-            get { return StringComparer.CurrentCultureIgnoreCase; }  // TODO allow custom culture
+            get { return StringComparer.CurrentCultureIgnoreCase; }
         }
-
-        #region Parsing Initializers
-
-        #endregion
 
         #region Equality Members
 
@@ -208,7 +175,6 @@ namespace PathLib
 
         /// <summary>
         /// Compare two <see cref="PureWindowsPath"/> for inequality.
-        /// Case insensitive.
         /// </summary>
         /// <param name="first"></param>
         /// <param name="second"></param>
@@ -232,16 +198,14 @@ namespace PathLib
                 return false;
             }
 
-            // Resolve symlinks before comparing
             var parent = new List<string>(first.NormCase().Parts);
             var child = new List<string>(second.NormCase().Parts);
 
-            // Parent must be shorter than child
             if (parent.Count() >= child.Count())
             {
                 return false;
             }
-            foreach (var parts in parent.Zip(child, (p, c) => new [] {p, c}))
+            foreach (var parts in parent.Zip(child, (p, c) => new[] { p, c }))
             {
                 if (!String.Equals(parts[0], parts[1], StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -295,14 +259,13 @@ namespace PathLib
         /// <returns></returns>
         public bool Equals(PureWindowsPath other)
         {
-            return !ReferenceEquals(other, null) && 
+            return !ReferenceEquals(other, null) &&
                 NormCase().ToString().Equals(
                     other.NormCase().ToString());
         }
 
         /// <summary>
         /// Compare two <see cref="PureWindowsPath"/> for equality.
-        /// Case insensitive.
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
@@ -350,7 +313,7 @@ namespace PathLib
         /// <inheritdoc/>
         public override bool IsReserved()
         {
-            if(_cachedReserved.HasValue)
+            if (_cachedReserved.HasValue)
             {
                 return _cachedReserved.Value;
             }
@@ -368,8 +331,8 @@ namespace PathLib
         public override bool Match(string pattern)
         {
             return PathUtils.Glob(
-                pattern, 
-                ToString(), 
+                pattern,
+                ToString(),
                 IsAbsolute(), true);
         }
 
@@ -378,16 +341,16 @@ namespace PathLib
         {
             return new PureWindowsPath(
                 Drive.ToLower(currentCulture),
-                Root, 
-                Dirname.ToLower(currentCulture),
-                Basename.ToLower(currentCulture),
-                Extension.ToLower(currentCulture));
+                Root,
+                Tail.Select(s => s.ToLower(currentCulture))
+                    .ToImmutableList());
         }
 
         /// <inheritdoc/>
-        protected override PureWindowsPath PurePathFactoryFromComponents(string drive, string root, string dirname, string basename, string extension)
+        protected override PureWindowsPath PurePathFactoryFromComponents(
+            string drive, string root, ImmutableList<string> tail)
         {
-            return new PureWindowsPath(drive, root, dirname, basename, extension);
+            return new PureWindowsPath(drive, root, tail);
         }
     }
 }

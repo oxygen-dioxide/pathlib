@@ -95,7 +95,7 @@ namespace PathLib.Utils
             return path1 + separator + path2;
         }
 
-        internal static IPurePath Combine(IEnumerable<IPurePath> paths, string separator)
+        internal static string Combine(IEnumerable<IPurePath> paths, string separator)
         {
             if (String.IsNullOrEmpty(separator))
             {
@@ -103,49 +103,44 @@ namespace PathLib.Utils
                     "Separator cannot be empty or null.", "separator");
             }
             IPurePath lastAbsolute = null;
-            var dirnameBuilder = new StringBuilder();
-            var lastPartStr = "";
+            var tailBuilder = new List<string>();
             IPurePath lastPart = null;
 
             foreach (var path in paths)
             {
                 var pStr = path.ToString();
-                if(pStr == String.Empty || pStr == CurrentDirectoryIdentifier)
+                if (pStr == String.Empty || pStr == CurrentDirectoryIdentifier)
                 {
                     continue;
                 }
 
-                // Does not use IsAbsolute in order to retain compatibility
-                // with Path.Combine: Path.Combine("c:\\windows", "d:dir") 
-                // returns "d:dir" despite the fact that it's a relative path.
-                if(lastAbsolute == null || !String.IsNullOrEmpty(path.Anchor))
+                if (lastAbsolute == null || !String.IsNullOrEmpty(path.Anchor))
                 {
-                    dirnameBuilder.Length = 0;
+                    tailBuilder.Clear();
                     lastAbsolute = path;
                 }
-                else if(dirnameBuilder.Length > 0 && !lastPartStr.EndsWith(separator))
-                {
-                    dirnameBuilder.Append(separator);
-                }
-                
-                dirnameBuilder.Append(
-                    path.GetComponents(PathComponent.Dirname | PathComponent.Filename)); 
+
+                tailBuilder.AddRange(path.Tail);
                 lastPart = path;
-                lastPartStr = path.ToString();
             }
-            if(lastAbsolute == null)
+
+            if (lastAbsolute == null)
             {
                 return null;
             }
 
-            var filenameLen = lastPart.Filename.Length;
-            dirnameBuilder.Remove(dirnameBuilder.Length - filenameLen, filenameLen);
-            // TODO optimize this so fewer new objects are created
-            return lastAbsolute
-                .WithDirname(dirnameBuilder
-                    .ToString()
-                    .TrimEnd(separator[0]))
-                .WithFilename(lastPart.Filename);
+            if (lastPart != null && lastPart.Tail.Count > 0)
+            {
+                // Remove the last path's filename from the combined tail
+                tailBuilder.RemoveRange(
+                    tailBuilder.Count - lastPart.Tail.Count, lastPart.Tail.Count);
+            }
+
+            tailBuilder.AddRange(lastPart.Tail);
+
+            var anchor = lastAbsolute.Anchor;
+            var tailStr = String.Join(separator, tailBuilder);
+            return anchor + tailStr;
         }
 
         /// <summary>
