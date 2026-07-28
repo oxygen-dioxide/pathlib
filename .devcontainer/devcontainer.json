@@ -1,0 +1,13 @@
+{
+    "name": "pathlib",
+    "image": "mcr.microsoft.com/devcontainers/dotnet:6.0",
+    "features": {},
+    "customizations": {
+		"vscode": {
+			"extensions": [
+				"hbenl.vscode-test-explorer",
+				"ms-dotnettools.csdevkit"
+			]
+		}
+	}
+}
