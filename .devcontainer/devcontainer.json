@@ -1,7 +1,9 @@
 {
     "name": "pathlib",
     "image": "mcr.microsoft.com/devcontainers/dotnet:6.0",
-    "features": {},
+    "features": {
+        "ghcr.io/devcontainers/features/node:1": {}
+    },
     "customizations": {
 		"vscode": {
 			"extensions": [
