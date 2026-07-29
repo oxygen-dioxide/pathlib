@@ -26,6 +26,7 @@ public class PosixPathTestsFixture : IDisposable
         do
         {
             TempFolder = Path.Combine(Path.GetTempPath(), "pathlib_" + Guid.NewGuid().ToString());
+            TempFolder = new FileInfo(TempFolder).LinkTarget ?? TempFolder;
         } while (Directory.Exists(TempFolder));
         Directory.CreateDirectory(TempFolder);
     }
