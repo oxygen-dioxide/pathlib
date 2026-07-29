@@ -14,16 +14,22 @@ jobs:
         os: 
           - runs-on: windows-latest
             arch: win-x64
+            type: windows
           - runs-on: macos-15-intel
             arch: osx-x64
+            type: posix
           - runs-on: ubuntu-latest
             arch: linux-x64
+            type: posix
           - runs-on: windows-11-arm
             arch: win-arm64
+            type: windows
           - runs-on: macos-15
             arch: osx-arm64
+            type: posix
           - runs-on: ubuntu-24.04-arm
             arch: linux-arm64
+            type: posix
 
     steps:
     - uses: actions/checkout@v1
@@ -36,9 +42,9 @@ jobs:
       run: dotnet test PathLib.UnitTest
   
     - name: run Windows specific tests
-      if: ${{ matrix.os.runs-on == 'windows-latest' }}
+      if: ${{ matrix.os.type == 'windows' }}
       run: dotnet test PathLib.UnitTest.Windows
     
     - name: run Posix specific tests
-      if: ${{ matrix.os.runs-on != 'windows-latest' }}
+      if: ${{ matrix.os.type == 'posix' }}
       run: dotnet test PathLib.UnitTest.Posix
