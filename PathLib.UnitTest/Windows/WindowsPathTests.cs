@@ -4,6 +4,7 @@ using FluentAssertions;
 using Xunit;
 using PathLib;
 using Path = System.IO.Path;
+using PathLib.UnitTest.Utils;
 
 namespace PathLib.UnitTest.Windows
 {
