@@ -12,13 +12,14 @@ namespace PathLib.UnitTest
     {
         public string TempFolder { get; }
         
-        public bool IsWindows { get; set;  }
+        public bool IsWindows { get; set; }
 
         public PathTestsFixture()
         {
             do
             {
                 TempFolder = Path.Combine(Path.GetTempPath(), "pathlib_" + Guid.NewGuid().ToString());
+                TempFolder = new FileInfo(TempFolder).LinkTarget ?? TempFolder;
             } while (Directory.Exists(TempFolder));
             Directory.CreateDirectory(TempFolder);
             
@@ -80,6 +81,7 @@ namespace PathLib.UnitTest
                 Path.Combine(rootPath, "sym3"),
                 Path.Combine(rootPath, "real2/real3/file.txt"));
          */
+        
         
         [Fact]
         public void Resolve_WithNoSymlinks_KeepsSamePath()
