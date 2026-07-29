@@ -38,13 +38,5 @@ jobs:
       with:
         dotnet-version: '6.0.x'
 
-    - name: Run general tests
-      run: dotnet test PathLib.UnitTest
-  
-    - name: run Windows specific tests
-      if: ${{ matrix.os.type == 'windows' }}
-      run: dotnet test PathLib.UnitTest.Windows
-    
-    - name: run Posix specific tests
-      if: ${{ matrix.os.type == 'posix' }}
-      run: dotnet test PathLib.UnitTest.Posix
+    - name: Run tests
+      run: dotnet test
