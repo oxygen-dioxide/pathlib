@@ -35,7 +35,7 @@ namespace PathLib.UnitTest.Windows
             _fixture = fixture;
         }
 
-        [Fact]
+        [WindowsOnlyFact]
         public void IsJunction_WithJunction_ReturnsTrue()
         {
             var ret = TestUtils.CreateJunctionAndTarget(_fixture.TempFolder);
@@ -47,7 +47,7 @@ namespace PathLib.UnitTest.Windows
             TestUtils.DeleteJunctionAndTarget(junction);
         }
 
-        [Fact]
+        [WindowsOnlyFact]
         public void SetCurrentDirectory_WithDirectory_SetsEnvironmentVariable()
         {
             const string newCwd = @"C:\";
@@ -58,7 +58,7 @@ namespace PathLib.UnitTest.Windows
             }
         }
 
-        [Fact]
+        [WindowsOnlyFact]
         public void SetCurrentDirectory_UponDispose_RestoresEnvironmentVariable()
         {
             var oldCwd = Environment.CurrentDirectory;
@@ -70,7 +70,7 @@ namespace PathLib.UnitTest.Windows
             Assert.Equal(oldCwd, Environment.CurrentDirectory);
         }
 
-        [Fact]
+        [WindowsOnlyFact]
         public void ExpandUser_WithHomeDir_ExpandsDir()
         {
             var path = new WindowsPath("~/tmp");
@@ -82,7 +82,7 @@ namespace PathLib.UnitTest.Windows
             Assert.Equal(expected, actual);
         }
 
-        [Fact]
+        [WindowsOnlyFact]
         public void ExpandUser_WithCustomHomeDirString_ExpandsDir()
         {
             var homeDir = new WindowsPath(@"C:\users\test");
@@ -92,7 +92,7 @@ namespace PathLib.UnitTest.Windows
             path.ExpandUser(homeDir).Should().Be(expected);
         }
 
-        [Fact]
+        [WindowsOnlyFact]
         public void JoinIPath_WithAnotherPath_ReturnsWindowsPath()
         {
             IPath path = new WindowsPath(@"C:\tmp");
@@ -103,7 +103,7 @@ namespace PathLib.UnitTest.Windows
             Assert.True(final is WindowsPath);
         }
 
-        [Fact]
+        [WindowsOnlyFact]
         public void JoinIPath_WithAnotherPathByDiv_ReturnsWindowsPath()
         {
             IPath path = new WindowsPath(@"C:\tmp");
@@ -114,7 +114,7 @@ namespace PathLib.UnitTest.Windows
             Assert.True(final is WindowsPath);
         }
 
-        [Fact]
+        [WindowsOnlyFact]
         public void JoinIPath_WithStringByDiv_ReturnsWindowsPath()
         {
             IPath path = new WindowsPath(@"C:\tmp");
@@ -125,7 +125,7 @@ namespace PathLib.UnitTest.Windows
             Assert.True(final is WindowsPath);
         }
 
-        [Fact]
+        [WindowsOnlyFact]
         public void JoinWindowsPath_WithStringByDiv_ReturnsWindowsPath()
         {
             var path = new WindowsPath(@"C:\tmp");
