@@ -25,7 +25,7 @@ public class PosixPathTestsFixture : IDisposable
     {
         do
         {
-            TempFolder = Path.Combine(Path.GetTempPath(), "pathlib_" + Guid.NewGuid().ToString());
+            TempFolder = Path.Combine(Path.GetTempPath(), "pathlib_" + Guid.NewGuid().ToString()[..8]);
         } while (Directory.Exists(TempFolder));
         Directory.CreateDirectory(TempFolder);
         TempFolder = Directory.ResolveLinkTarget(TempFolder, returnFinalTarget: true)?.FullName ?? TempFolder;
@@ -187,7 +187,7 @@ public class PosixPathTests : IClassFixture<PosixPathTestsFixture>
     [PosixOnlyFact]
     public void FileType_WithSocket_ReturnsSocket()
     {
-        var fname = Guid.NewGuid().ToString();
+        var fname = Guid.NewGuid().ToString()[..8];
         var path = Path.Combine(_fixture.TempFolder, fname);
         var pipeServer = new NamedPipeServerStream(path, PipeDirection.InOut);
 
