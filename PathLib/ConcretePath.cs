@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using PathLib.Utils;
 
 namespace PathLib
@@ -464,6 +466,12 @@ namespace PathLib
         public string Drive
         {
             get { return PurePath.Drive; }
+        }
+
+        /// <inheritdoc/>
+        public IReadOnlyList<string> Tail
+        {
+            get { return PurePath.Tail; }
         }
 
         /// <inheritdoc/>

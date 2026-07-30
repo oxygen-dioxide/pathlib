@@ -1,18 +1,10 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using Xunit;
+using PathLib.UnitTest.Utils;
 
 namespace PathLib.UnitTest
-{
-    public sealed class IgnoreOnLinuxFact : FactAttribute
-    {
-        public IgnoreOnLinuxFact() {
-            if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
-                Skip = "Ignore on Linux";
-            }
-        }
-    }
-    
+{   
     public class PathFactoryUnitTest
     {
         private static readonly bool IsWindows;
@@ -72,7 +64,7 @@ namespace PathLib.UnitTest
             Assert.True(actual);
         }
 
-        [IgnoreOnLinuxFact]
+        [WindowsOnlyFact]
         public void TryCreate_WithInvalidPath_ReturnsFalse()
         {
             const string path = ":::";

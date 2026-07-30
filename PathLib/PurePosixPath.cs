@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 using PathLib.Utils;
 
 namespace PathLib
@@ -31,7 +33,7 @@ namespace PathLib
         }
 
         /// <summary>
-        /// Create a path by joinin the given IPurePaths.
+        /// Create a path by joining the given IPurePaths.
         /// </summary>
         /// <param name="paths">Paths to combine.</param>
         public PurePosixPath(params IPurePath[] paths)
@@ -40,8 +42,8 @@ namespace PathLib
         }
 
         /// <inheritdoc/>
-        private PurePosixPath(string drive, string root, string dirname, string basename, string extension)
-            : base(drive, root, dirname, basename, extension)
+        private PurePosixPath(string drive, string root, ImmutableList<string> tail)
+            : base(drive, root, tail)
         {
         }
 
@@ -58,42 +60,26 @@ namespace PathLib
 
             public string ParseRoot(string remainingPath)
             {
-                // Special case in POSIX pathname resolution
-                // http://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap04.html#tag_04_11
                 if (remainingPath.StartsWith(PathSeparator + PathSeparator) &&
                     (remainingPath.Length <= 2 || (remainingPath[2]) != PathSeparator[0]))
                 {
                     return PathSeparator + PathSeparator;
                 }
-                return remainingPath.StartsWith(PathSeparator) 
-                    ? PathSeparator 
+                return remainingPath.StartsWith(PathSeparator)
+                    ? PathSeparator
                     : null;
             }
 
-            public string ParseDirname(string remainingPath)
+            public ImmutableList<string> ParseTail(string remainingPath)
             {
-                // Hardcode special dirs
-                if (remainingPath == "." || remainingPath == "..")
+                if (String.IsNullOrEmpty(remainingPath))
                 {
-                    return remainingPath;
+                    return ImmutableList<string>.Empty;
                 }
-                return PathUtils.GetDirectoryName(remainingPath, PathSeparator);
-            }
 
-            public string ParseBasename(string remainingPath)
-            {
-                return !String.IsNullOrEmpty(remainingPath)
-                    ? remainingPath != PathUtils.CurrentDirectoryIdentifier
-                        ? PathUtils.GetFileNameWithoutExtension(remainingPath, PathSeparator)
-                            : PathUtils.CurrentDirectoryIdentifier
-                    : null;
-            }
-
-            public string ParseExtension(string remainingPath)
-            {
-                return !String.IsNullOrEmpty(remainingPath)
-                    ? PathUtils.GetExtension(remainingPath, PathSeparator)
-                    : null;
+                return remainingPath.Split('/')
+                    .Where(s => !String.IsNullOrEmpty(s))
+                    .ToImmutableList();
             }
 
             public bool ReservedCharactersInPath(string path, out char reservedCharacter)
@@ -135,9 +121,10 @@ namespace PathLib
         }
 
         /// <inheritdoc/>
-        protected override PurePosixPath PurePathFactoryFromComponents(string drive, string root, string dirname, string basename, string extension)
+        protected override PurePosixPath PurePathFactoryFromComponents(
+            string drive, string root, ImmutableList<string> tail)
         {
-            return new PurePosixPath(drive, root, dirname, basename, extension);
+            return new PurePosixPath(drive, root, tail);
         }
 
         /// <inheritdoc/>
@@ -173,7 +160,6 @@ namespace PathLib
 
         /// <summary>
         /// Compare two <see cref="PurePosixPath"/> for inequality.
-        /// Case sensitive.
         /// </summary>
         /// <param name="first"></param>
         /// <param name="second"></param>
@@ -202,7 +188,7 @@ namespace PathLib
                 return false;
             }
 
-            foreach (var parts in first.Parts.Zip(second.Parts, (p, c) => new[]{p, c}))
+            foreach (var parts in first.Parts.Zip(second.Parts, (p, c) => new[] { p, c }))
             {
                 if (parts[0] != parts[1])
                 {
@@ -261,7 +247,6 @@ namespace PathLib
 
         /// <summary>
         /// Compare two <see cref="PurePosixPath"/> for equality.
-        /// Case sensitive.
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>

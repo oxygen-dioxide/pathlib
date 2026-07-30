@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 
 namespace PathLib
 {
@@ -57,6 +59,12 @@ namespace PathLib
         /// </para>
         /// </summary>
         string[] Extensions { get; }
+
+        /// <summary>
+        /// The path components after Drive/Root.
+        /// Last element is the filename (basename + extension).
+        /// </summary>
+        IReadOnlyList<string> Tail { get; }
 
         /// <summary>
         /// Gets the path 
@@ -142,7 +150,7 @@ namespace PathLib
             var child = new List<string>(second.NormCase().Parts);
 
             // Parent must be shorter than child
-            if (parent.Count() >= child.Count())
+            if (parent.Count >= child.Count)
             {
                 return false;
             }

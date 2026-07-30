@@ -12,7 +12,7 @@ namespace PathLib.UnitTest
     {
         public string TempFolder { get; }
         
-        public bool IsWindows { get; set;  }
+        public bool IsWindows { get; set; }
 
         public PathTestsFixture()
         {
@@ -29,6 +29,7 @@ namespace PathLib.UnitTest
             if (p == PlatformID.Unix || p == PlatformID.MacOSX || (int)p == 128)
             {
                 IsWindows = false;
+                TempFolder = Paths.Create(TempFolder).Resolve().ToString();
             }
         }
 
@@ -80,6 +81,7 @@ namespace PathLib.UnitTest
                 Path.Combine(rootPath, "sym3"),
                 Path.Combine(rootPath, "real2/real3/file.txt"));
          */
+        
         
         [Fact]
         public void Resolve_WithNoSymlinks_KeepsSamePath()

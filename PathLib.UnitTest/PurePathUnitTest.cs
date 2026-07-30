@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
@@ -51,40 +52,16 @@ namespace PathLib.UnitTest
                 return root.EndsWith(PathSeparator) ? PathSeparator : null;
             }
 
-            public string ParseDirname(string remainingPath)
+            public ImmutableList<string> ParseTail(string remainingPath)
             {
-                return PathLib.Utils.PathUtils.GetDirectoryName(remainingPath, PathSeparator) ?? "";
-            }
-
-            public string? ParseBasename(string remainingPath)
-            {
-                var currentDirectoryIdentifier = PathLib.Utils.PathUtils.CurrentDirectoryIdentifier;
-
-                if (String.IsNullOrEmpty(remainingPath) == false)
+                if (String.IsNullOrEmpty(remainingPath))
                 {
-                    return _getFileNameOrDirectoryName(remainingPath, currentDirectoryIdentifier);
+                    return ImmutableList<string>.Empty;
                 }
 
-                return null;
-
-                string _getFileNameOrDirectoryName(string remainingPathString, string currentDirIdentifier)
-                {
-                    if (remainingPath != currentDirectoryIdentifier)
-                    {
-                        return PathUtils.GetFileNameWithoutExtension(remainingPath, PathSeparator);
-                    }
-                    else
-                    {
-                        return currentDirectoryIdentifier;
-                    }
-                }
-            }
-
-            public string? ParseExtension(string remainingPath)
-            {
-                return !String.IsNullOrEmpty(remainingPath)
-                    ? PathLib.Utils.PathUtils.GetExtension(remainingPath, PathSeparator)
-                    : null;
+                return remainingPath.Split(PathSeparator[0])
+                    .Where(s => !String.IsNullOrEmpty(s))
+                    .ToImmutableList();
             }
 
             public bool ReservedCharactersInPath(string path, out char reservedCharacter)
@@ -112,9 +89,8 @@ namespace PathLib.UnitTest
             }
 
             public MockPath(
-                string drive, string root, string dirname,
-                string basename, string extension) : base(drive, root, dirname,
-                basename, extension)
+                string drive, string root, ImmutableList<string> tail)
+                : base(drive, root, tail)
             {
             }
 
@@ -136,14 +112,18 @@ namespace PathLib.UnitTest
                     return false;
                 }
 
-                return Drive == other.Drive && Root == other.Root && Dirname == other.Dirname &&
-                       Basename == other.Basename && Extension == other.Extension;
+                return Drive == other.Drive && Root == other.Root &&
+                       Tail.SequenceEqual(other.Tail);
             }
 
             public override int GetHashCode()
             {
-                return (Drive ?? "").GetHashCode() + (Root ?? "").GetHashCode() + (Dirname ?? "").GetHashCode() +
-                       (Basename ?? "").GetHashCode() + (Extension ?? "").GetHashCode();
+                var hash = (Drive ?? "").GetHashCode() + (Root ?? "").GetHashCode();
+                foreach (var part in Tail)
+                {
+                    hash ^= (part ?? "").GetHashCode();
+                }
+                return hash;
             }
 
             public override bool IsReserved()
@@ -170,11 +150,9 @@ namespace PathLib.UnitTest
             }
 
             protected override MockPath PurePathFactoryFromComponents(
-                string drive, string root, string dirname,
-                string basename, string extension)
+                string drive, string root, ImmutableList<string> tail)
             {
-                return new MockPath(drive, root, dirname,
-                    basename, extension);
+                return new MockPath(drive, root, tail);
             }
         }
 

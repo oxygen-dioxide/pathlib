@@ -78,8 +78,8 @@ namespace PathLib
                 CTime = ctim,
                 Device = (long)info.st_dev,
                 Inode = (long)info.st_ino,
-                Gid = info.st_uid,
-                Uid = info.st_gid,
+                Gid = info.st_gid,
+                Uid = info.st_uid,
                 ModeDecimal = info.st_mode,
                 Mode = Convert.ToString(info.st_mode & (Native.SetBits | Native.UserBits | Native.GroupBits | Native.OtherBits), 8).PadLeft(4, '0'),
                 NumLinks = (long)info.st_nlink
