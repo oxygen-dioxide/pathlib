@@ -21,7 +21,7 @@ namespace PathLib.UnitTest
                 TempFolder = Path.Combine(Path.GetTempPath(), "pathlib_" + Guid.NewGuid().ToString());
             } while (Directory.Exists(TempFolder));
             Directory.CreateDirectory(TempFolder);
-            TempFolder = Directory.ResolveLinkTarget(TempFolder, returnFinalTarget: true)?.FullName ?? TempFolder;
+            TempFolder = new PosixPath(TempFolder).Resolve().ToString();
             
             IsWindows = true;
             var p = Environment.OSVersion.Platform;
