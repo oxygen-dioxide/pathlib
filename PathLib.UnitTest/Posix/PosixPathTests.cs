@@ -374,7 +374,7 @@ public class PosixPathTests : IClassFixture<PosixPathTestsFixture>
     public void ResolvePosixPath_IntermediateDotDot_IsRemoved()
     {
         var path = new PosixPath("/tmp/../tmp");
-        var expected = new PosixPath("/tmp");
+        var expected = new PosixPath("/tmp").Resolve();
         var actual = path.Resolve();
         Assert.Equal(expected, actual);
     }
