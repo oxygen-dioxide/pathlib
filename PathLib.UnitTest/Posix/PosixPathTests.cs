@@ -28,7 +28,7 @@ public class PosixPathTestsFixture : IDisposable
             TempFolder = Path.Combine(Path.GetTempPath(), "pathlib_" + Guid.NewGuid().ToString()[..8]);
         } while (Directory.Exists(TempFolder));
         Directory.CreateDirectory(TempFolder);
-        TempFolder = Native.realpath(TempFolder);
+        TempFolder = new PosixPath(TempFolder).Resolve().ToString();
     }
 
     public void Dispose()
