@@ -127,7 +127,7 @@ namespace PathLib.Posix
 
     }
 
-    internal static class Native {
+    public static class Native {
         [DllImport("libc", SetLastError = true, CharSet = CharSet.Auto, CallingConvention=CallingConvention.Cdecl)]
         public static extern int stat64(string path, out StatNative info);
 
